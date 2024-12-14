@@ -1,0 +1,179 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        select, input, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 0;
+            list-style: none;
+        }
+        
+
+        .card {
+        width: 300px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        border: 1px solid #ddd;
+        position: relative; /* Để xử lý hiển thị chi tiết */
+        vertical-align: top; /* Giữ card cùng hàng không bị lệch */
+        min-height: 100px; /* Đặt chiều cao tối thiểu cho các card */
+        overflow: hidden;
+    }
+        .card h3 {
+            margin: 0;
+            color: #333;
+            overflow: hidden;
+        }
+        .card p {
+            margin: 5px 0;
+            color: #555;
+            overflow: hidden;
+        }
+        .card button {
+            margin-top: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .card button:hover {
+            background-color: #218838;
+            height: auto;
+        }
+        
+        .card .details {
+        display: none;
+        margin-top: 15px; 
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        height: 0;
+        transition: height 0.3s ease;
+        overflow: hidden;
+    }
+ 
+        
+    </style>
+</head>
+<body>
+    <h1>Movie Search</h1>
+    <form onsubmit="return false;">
+        
+        <label for="field-select">Select Field:</label>
+        <select id="field-select">
+            <option value="title">Title</option>
+            <option value="director">Director</option>
+            <option value="genre">Genre</option>
+            <option value="plot">Plot</option>
+        </select>
+        
+        
+        <input id="search-box" type="text" placeholder="Enter query">
+        <button onclick="search()">Search</button>
+    </form>
+    <ul id="results"></ul>
+
+    <script>
+        async function search() {
+            const field = document.getElementById('field-select').value; 
+            const query = document.getElementById('search-box').value;  
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(`/search?field=${field}&q=${query}`); 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const results = await response.json();
+
+                results.forEach(result => {
+                    const card = document.createElement('li');
+                    card.className = 'card';
+
+                    card.innerHTML = `
+                        <h3>${result.title}</h3>
+                        <p><strong>Rank:</strong> ${result.rank}</p>
+                        <p><strong>Score:</strong> ${result.score.toFixed(2)}</p>
+                        <button onclick="toggleDetails(this)">View Details</button>
+                        <div class="details">
+                            <p><strong>Director:</strong> ${result.director || 'N/A'}</p>
+                            <p><strong>Genre:</strong> ${result.genre || 'N/A'}</p>
+                            <p><strong>Plot:</strong> ${result.plot || 'N/A'}</p>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+            } catch (error) {
+                console.error(error);
+                resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        function toggleDetails(button) {
+            const details = button.nextElementSibling;
+            const isVisible = details.style.display === 'block';
+            
+            document.querySelectorAll('.card .details').forEach(detail => {
+                detail.style.display = 'none';
+                detail.style.height = '0'; 
+            });
+
+          
+            document.querySelectorAll('.card button').forEach(btn => {
+                btn.textContent = 'View Details';
+            });
+
+            
+            if (!isVisible) {
+                details.style.display = 'block';
+                details.style.height = 'auto';
+                button.textContent = 'Hide Details';
+            }
+        }
+    </script>
+</body>
+</html> 
+
